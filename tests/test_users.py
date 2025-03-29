@@ -48,6 +48,29 @@ def test_update_user(client, user, token):
     }
 
 
+def test_token_inexistent_user(client):
+    response = client.post(
+        '/auth/token',
+        data={'username': 'no_user@no_domain.com', 'password': 'testtest'},
+    )
+    assert response.status_code == HTTPStatus.UNAUTHORIZED
+    assert response.json() == {'detail': 'Incorrect email or password'}
+
+
+def test_update_user_with_wrong_user(client, other_user, token):
+    response = client.put(
+        f'/users/{other_user.id}',
+        headers={'Authorization': f'Bearer {token}'},
+        json={
+            'username': 'bob',
+            'email': 'bob@example.com',
+            'password': 'mynewpassword',
+        },
+    )
+    assert response.status_code == HTTPStatus.FORBIDDEN
+    assert response.json() == {'detail': 'Not enough permissions'}
+
+
 def test_update_integrity_error(client, user, token):
     # Inserindo fausto
     client.post(
